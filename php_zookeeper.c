@@ -309,9 +309,16 @@ static PHP_METHOD(Zookeeper, get)
 	}
 	status = zoo_wget(i_obj->zk, path, (fci.size != 0) ? php_zk_watcher_marshal : NULL,
 					  cb_data, buffer, &buffer_len, &stat);
+	
 	if (status != ZOK) {
 		php_cb_data_destroy(&cb_data);
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "error: %s", zerror(status));
+		return;
+	}
+	
+	if (buffer_len == -1) {
+		php_cb_data_destroy(&cb_data);
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "error: no data for in node %s", path);
 		return;
 	}
 
@@ -1002,7 +1009,7 @@ ZEND_END_ARG_INFO()
 static zend_function_entry zookeeper_class_methods[] = {
     ZK_ME(__construct,        arginfo___construct)
     ZK_ME(connect,            arginfo_connect )
-
+	
 	ZK_ME(create,             arginfo_create)
 	ZK_ME(delete,             arginfo_delete)
 	ZK_ME(get,                arginfo_get)
